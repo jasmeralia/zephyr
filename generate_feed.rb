@@ -87,5 +87,5 @@ end
 print "#{total_count} instances across all monitored regions.\n"
 
 f = File.new(config['json_feed'], 'w+')
-f.write(JSON.pretty_generate(feedlist.to_json))
+f.write(JSON.pretty_generate(feedlist))
 f.close
