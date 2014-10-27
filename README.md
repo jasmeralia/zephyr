@@ -14,6 +14,8 @@ Configuration:
 --------------
 Create a ~/.zephyr/config file. Supported attributes at this time are:
 
+|Config file|Comments|
+|-----------|--------|
 |`json_feed = /var/www/html/zephyr.json`|(this specifies where on the filesystem to write the JSON file)|
 |`[aws]`| |
 |`aws_region_ap-northeast-1=skip`|(skip polling the ap-northeast-1 EC2 region; if you have no nodes there, why bother iterating over it?)|
