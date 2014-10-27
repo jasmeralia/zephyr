@@ -1,11 +1,13 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
-require 'trollop'
 require 'parseconfig'
 require 'aws-sdk-v1'
 require 'json'
 require 'pp'
+
+cfg_file = "#{ENV['HOME']}/.zephyr/config"
+config = ParseConfig.new(cfg_file)
 
 # define the list of AWS regions that we may possibly iterate over
 aws_regions = ['us-east-1', 'us-west-1', 'us-west-2', 'eu-west-1', 'eu-central-1', 'ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2', 'sa-east-1']
@@ -23,11 +25,13 @@ if !ENV['https_proxy'].nil?
 else
   if !ENV['http_proxy'].nil?
   	proxy = ENV['http_proxy']
+  else
+  	if !config['proxy'].nil?
+  	  proxy = config['proxy']
+  	end
   end
 end
 
-cfg_file = "#{ENV['HOME']}/.zephyr/config"
-config = ParseConfig.new(cfg_file)
 feedlist = Array.new
 if config['json_feed'].nil?
   print "No json_feed location defined in ~/.zephyr/config, exiting!\n"
@@ -83,5 +87,5 @@ end
 print "#{total_count} instances across all monitored regions.\n"
 
 f = File.new(config['json_feed'], 'w+')
-f.write(feedlist.to_json)
+f.write(JSON.pretty_generate(feedlist.to_json))
 f.close
