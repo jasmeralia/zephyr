@@ -45,9 +45,9 @@ aws_regions.each do |region|
   	print "Probing region #{region}...\n"
   	# setup aws config
   	if proxy.nil?
-      AWS.config(access_key_id: access_key, secret_access_key: secret_key, region: region, proxy_uri: proxy)
-    else
       AWS.config(access_key_id: access_key, secret_access_key: secret_key, region: region)
+    else
+      AWS.config(access_key_id: access_key, secret_access_key: secret_key, region: region, proxy_uri: proxy)
     end
     ec2 = AWS::ec2
 
