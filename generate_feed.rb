@@ -89,3 +89,12 @@ print "#{total_count} instances across all monitored regions.\n"
 f = File.new(config['json_feed'], 'w+')
 f.write(JSON.pretty_generate(feedlist))
 f.close
+
+unless config['text_feed'].nil?
+  f = File.new(config['text_feed'], 'w+')
+  feedlist.each do |inst|
+    line = sprintf("%-10s %-11s %-16s %-53s %-15s %-11s %-14s %s\n", inst['region'], inst['id'], inst['private_ip_address'], inst['private_dns_name'], inst['ami'], inst['type'], inst['status'], inst['name'])
+    f.write(line)
+  end
+  f.close
+end
