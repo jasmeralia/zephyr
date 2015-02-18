@@ -66,6 +66,9 @@ aws_regions.each do |region|
       inst['ami'] = instance.image_id
       inst['platform'] = instance.platform
       inst['region'] = region
+      inst['key_name'] = instance.key_name
+      inst['vpc_id'] = instance.vpc_id
+      inst['virtualization_type'] = instance.virtualization_type
       if instance.public_ip_address
       	inst['public_ip_address'] = instance.public_ip_address
       end
