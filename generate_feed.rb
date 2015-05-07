@@ -24,15 +24,13 @@ if !ENV['https_proxy'].nil?
   proxy = ENV['https_proxy']
 else
   if !ENV['http_proxy'].nil?
-  	proxy = ENV['http_proxy']
+    proxy = ENV['http_proxy']
   else
-  	if !config['proxy'].nil?
-  	  proxy = config['proxy']
-  	end
+    proxy = config['proxy'].nil? ? config['proxy'] : ''
   end
 end
 
-feedlist = Array.new
+feedlist = []
 if config['json_feed'].nil?
   print "No json_feed location defined in ~/.zephyr/config, exiting!\n"
   exit 1
@@ -40,50 +38,55 @@ end
 
 total_count = 0
 aws_regions.each do |region|
-  unless config['aws']["aws_region_#{region}"] == 'skip'
-  	count = 0
-  	print "Probing region #{region}...\n"
-  	# setup aws config
-  	if proxy.nil?
+  if config['aws']["aws_region_#{region}"] != 'skip'
+    count = 0
+    print "Probing region #{region}...\n"
+    # setup aws config
+    if proxy.nil?
       AWS.config(access_key_id: access_key, secret_access_key: secret_key, region: region)
     else
       AWS.config(access_key_id: access_key, secret_access_key: secret_key, region: region, proxy_uri: proxy)
     end
-    ec2 = AWS::ec2
+    ec2 = AWS.ec2
 
-    instances = ec2.instances.inject({}) { |m, i| m[i.id] = i.private_dns_name; m }
+    instances = ec2.instances.each_with_object({}) { |e, a| a[e.id] = e.private_dns_name }
     instances.each do |id, dns|
       instance = ec2.instances[id]
 
       inst = Hash.new
 
-      inst['id'] = id
-      inst['name'] = instance.tags['Name']
-      inst['private_dns_name'] = dns
-      inst['private_ip_address'] = instance.private_ip_address
-      inst['type'] = instance.instance_type
-      inst['status'] = instance.status
-      inst['ami'] = instance.image_id
-      inst['platform'] = instance.platform
-      inst['region'] = region
-      inst['key_name'] = instance.key_name
-      inst['vpc_id'] = instance.vpc_id
-      inst['virtualization_type'] = instance.virtualization_type
-      if instance.public_ip_address
-      	inst['public_ip_address'] = instance.public_ip_address
-      end
-      if instance.public_dns_name
-      	inst['public_dns_name'] = instance.public_dns_name
-      end
+      begin
+        inst['id'] = id
+        inst['name'] = instance.tags['Name']
+        inst['private_dns_name'] = dns
+        inst['private_ip_address'] = instance.private_ip_address
+        inst['type'] = instance.instance_type
+        inst['status'] = instance.status
+        inst['ami'] = instance.image_id
+        inst['platform'] = instance.platform
+        inst['region'] = region
+        inst['key_name'] = instance.key_name
+        inst['vpc_id'] = instance.vpc_id
+        inst['virtualization_type'] = instance.virtualization_type
+        if instance.public_ip_address
+          inst['public_ip_address'] = instance.public_ip_address
+        end
+        if instance.public_dns_name
+          inst['public_dns_name'] = instance.public_dns_name
+        end
 
-      feedlist = feedlist.push(inst)
-      count += 1
+        feedlist = feedlist.push(inst)
+        count += 1
+      rescue StandardError => e
+        print "Caught error '#{e.message}' trying to probe #{id} / #{dns}, skipping..."
+        puts e.backtrace.inspect
+      end
     end
 
     print "#{count} instances detected.\n"
     total_count += count
   else
-  	print "Skipping region #{region}...\n"
+    print "Skipping region #{region}...\n"
   end
 end
 
